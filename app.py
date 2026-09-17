@@ -36,8 +36,19 @@ def parse_date(value):
 @app.route('/')
 def index():
     kategori_tersedia = KategoriProyek.query.order_by(KategoriProyek.nama_kategori.asc()).all()
-    daftar_tugas = DaftarTugas.query.order_by(DaftarTugas.tenggat_waktu.asc()).all()
-    return render_template('index.html', kategori=kategori_tersedia, tugas=daftar_tugas)
+    task_page = request.args.get('task_page', 1, type=int) or 1
+    task_pagination = db.paginate(
+        db.select(DaftarTugas).order_by(DaftarTugas.tenggat_waktu.asc()),
+        page=task_page,
+        per_page=5,
+        error_out=False
+    )
+    return render_template(
+        'index.html',
+        kategori=kategori_tersedia,
+        tugas=task_pagination.items,
+        task_pagination=task_pagination
+    )
 
 
 @app.route('/tambah', methods=['POST'])
@@ -187,14 +198,16 @@ def logbook():
     kategori_tersedia = KategoriProyek.query.order_by(KategoriProyek.nama_kategori.asc()).all()
     daftar_tugas = DaftarTugas.query.order_by(DaftarTugas.tenggat_waktu.asc()).all()
 
-    ringkasan_kategori = db.session.query(
+    summary_page = request.args.get('summary_page', 1, type=int) or 1
+    logbook_page = request.args.get('logbook_page', 1, type=int) or 1
+
+    ringkasan_query = db.select(
         KategoriProyek.nama_kategori,
         db.func.count(LogbookPekerjaanHarian.id).label('jumlah_log'),
         db.func.coalesce(db.func.sum(LogbookPekerjaanHarian.durasi_belajar), 0).label('total_jam')
     ).outerjoin(LogbookPekerjaanHarian, LogbookPekerjaanHarian.kategori_id == KategoriProyek.id) \
         .group_by(KategoriProyek.id, KategoriProyek.nama_kategori) \
-        .order_by(KategoriProyek.nama_kategori.asc()) \
-        .all()
+        .order_by(KategoriProyek.nama_kategori.asc())
 
     if request.method == 'POST':
         tanggal = request.form.get('tanggal')
@@ -234,13 +247,27 @@ def logbook():
         flash('Logbook pekerjaan harian berhasil disimpan.', 'success')
         return redirect(url_for('logbook'))
 
-    logbook_list = LogbookPekerjaanHarian.query.order_by(LogbookPekerjaanHarian.tanggal.desc()).all()
+    ringkasan_pagination = db.paginate(
+        ringkasan_query,
+        page=summary_page,
+        per_page=6,
+        error_out=False
+    )
+    logbook_pagination = db.paginate(
+        db.select(LogbookPekerjaanHarian).order_by(LogbookPekerjaanHarian.tanggal.desc()),
+        page=logbook_page,
+        per_page=5,
+        error_out=False
+    )
+
     return render_template(
         'logbook.html',
-        logbooks=logbook_list,
+        logbooks=logbook_pagination.items,
         kategori=kategori_tersedia,
         tugas=daftar_tugas,
-        ringkasan_kategori=ringkasan_kategori
+        ringkasan_kategori=ringkasan_pagination.items,
+        ringkasan_pagination=ringkasan_pagination,
+        logbook_pagination=logbook_pagination
     )
 
 

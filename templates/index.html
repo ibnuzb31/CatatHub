@@ -197,6 +197,27 @@
                         <p class="mb-0">Belum ada tugas yang dibuat.</p>
                     </div>
                 {% endif %}
+                {% if task_pagination.pages > 1 %}
+                <nav class="mt-4" aria-label="Navigasi daftar tugas">
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item {% if not task_pagination.has_prev %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('index', task_page=task_pagination.prev_num or 1) }}" aria-label="Sebelumnya">&laquo;</a>
+                        </li>
+                        {% for page_num in task_pagination.iter_pages(left_edge=1, left_current=1, right_current=1, right_edge=1) %}
+                            {% if page_num %}
+                                <li class="page-item {% if page_num == task_pagination.page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('index', task_page=page_num) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                            {% endif %}
+                        {% endfor %}
+                        <li class="page-item {% if not task_pagination.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('index', task_page=task_pagination.next_num or task_pagination.pages) }}" aria-label="Berikutnya">&raquo;</a>
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
             </div>
         </div>
     </div>

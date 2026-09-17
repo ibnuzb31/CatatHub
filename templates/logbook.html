@@ -62,6 +62,27 @@
                     </div>
                     {% endfor %}
                 </div>
+                {% if ringkasan_pagination.pages > 1 %}
+                <nav class="mt-4" aria-label="Navigasi ringkasan kategori">
+                    <ul class="pagination pagination-sm justify-content-center mb-0">
+                        <li class="page-item {% if not ringkasan_pagination.has_prev %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('logbook', summary_page=ringkasan_pagination.prev_num or 1, logbook_page=logbook_pagination.page) }}" aria-label="Sebelumnya">&laquo;</a>
+                        </li>
+                        {% for page_num in ringkasan_pagination.iter_pages(left_edge=1, left_current=1, right_current=1, right_edge=1) %}
+                            {% if page_num %}
+                                <li class="page-item {% if page_num == ringkasan_pagination.page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('logbook', summary_page=page_num, logbook_page=logbook_pagination.page) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                            {% endif %}
+                        {% endfor %}
+                        <li class="page-item {% if not ringkasan_pagination.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('logbook', summary_page=ringkasan_pagination.next_num or ringkasan_pagination.pages, logbook_page=logbook_pagination.page) }}" aria-label="Berikutnya">&raquo;</a>
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
             </div>
         </div>
         {% endif %}
@@ -133,6 +154,8 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Tanggal</th>
+                                    <th>Kategori</th>
+                                    <th>Tugas Terkait</th>
                                     <th>Materi</th>
                                     <th>Pekerjaan</th>
                                     <th>Kendala</th>
@@ -146,14 +169,16 @@
                                 {% for item in logbooks %}
                                 <tr>
                                     <td>{{ item.tanggal.strftime('%Y-%m-%d') }}</td>
-                                    <td>{{ item.materi_dipelajari }}</td>
+                                    <td>{{ item.kategori.nama_kategori }}</td>
                                     <td>
                                         {% if item.tugas %}
-                                            {{ item.tugas.nama_tugas }}
+                                            <span class="badge text-bg-primary">{{ item.tugas.nama_tugas }}</span>
                                         {% else %}
-                                            {{ item.pekerjaan }}
+                                            <span class="text-muted">Tanpa tugas terkait</span>
                                         {% endif %}
                                     </td>
+                                    <td>{{ item.materi_dipelajari }}</td>
+                                    <td>{{ item.pekerjaan }}</td>
                                     <td>{{ item.kendala }}</td>
                                     <td>{{ item.solusi or '-' }}</td>
                                     <td>{{ item.target_belajar_besok }}</td>
@@ -175,6 +200,27 @@
                     <div class="text-center py-4 text-muted">
                         <p class="mb-0">Belum ada logbook yang tersimpan.</p>
                     </div>
+                {% endif %}
+                {% if logbook_pagination.pages > 1 %}
+                <nav class="mt-4" aria-label="Navigasi riwayat logbook">
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item {% if not logbook_pagination.has_prev %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('logbook', logbook_page=logbook_pagination.prev_num or 1, summary_page=ringkasan_pagination.page) }}" aria-label="Sebelumnya">&laquo;</a>
+                        </li>
+                        {% for page_num in logbook_pagination.iter_pages(left_edge=1, left_current=1, right_current=1, right_edge=1) %}
+                            {% if page_num %}
+                                <li class="page-item {% if page_num == logbook_pagination.page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('logbook', logbook_page=page_num, summary_page=ringkasan_pagination.page) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                            {% endif %}
+                        {% endfor %}
+                        <li class="page-item {% if not logbook_pagination.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('logbook', logbook_page=logbook_pagination.next_num or logbook_pagination.pages, summary_page=ringkasan_pagination.page) }}" aria-label="Berikutnya">&raquo;</a>
+                        </li>
+                    </ul>
+                </nav>
                 {% endif %}
             </div>
         </div>
