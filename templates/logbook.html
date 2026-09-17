@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logbook Pekerjaan Harian</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">Project Manager</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">Tugas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('logbook') }}">Logbook</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <p class="text-uppercase text-primary fw-bold mb-1">Daily Reflection</p>
+                <h1 class="mb-0">Logbook Pekerjaan Harian</h1>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    {% set icon = 'success' if category == 'success' else 'warning' if category == 'warning' else 'error' if category == 'danger' else 'info' %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert" data-swal="true" data-swal-title="{{ category|title }}" data-swal-text="{{ message }}" data-swal-icon="{{ icon }}">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if ringkasan_kategori %}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <h2 class="h4 mb-3">Ringkasan Per Kategori</h2>
+                <div class="row g-3">
+                    {% for item in ringkasan_kategori %}
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <h3 class="h6 text-primary mb-2">{{ item.nama_kategori }}</h3>
+                            <p class="mb-1"><strong>Jumlah Logbook:</strong> {{ item.jumlah_log }}</p>
+                            <p class="mb-0"><strong>Total Jam:</strong> {{ item.total_jam }} jam</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <h2 class="h4 mb-3">Isi Logbook Hari Ini</h2>
+                <form action="{{ url_for('logbook') }}" method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="tanggal" class="form-label">Tanggal</label>
+                            <input type="date" class="form-control" id="tanggal" name="tanggal" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="durasi_belajar" class="form-label">Durasi Belajar (jam)</label>
+                            <input type="number" class="form-control" id="durasi_belajar" name="durasi_belajar" step="0.5" min="0" placeholder="Contoh: 2.5" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="kategori_id" class="form-label">Kategori</label>
+                            <select class="form-select" id="kategori_id" name="kategori_id" required>
+                                <option value="" selected disabled>Pilih kategori</option>
+                                {% for kat in kategori %}
+                                    <option value="{{ kat.id }}">{{ kat.nama_kategori }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tugas_id" class="form-label">Tugas Terkait (opsional)</label>
+                            <select class="form-select" id="tugas_id" name="tugas_id">
+                                <option value="">Tidak ada tugas terkait</option>
+                                {% for item in tugas %}
+                                    <option value="{{ item.id }}" data-kategori-id="{{ item.kategori_id }}">{{ item.nama_tugas }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="materi_dipelajari" class="form-label">Materi yang Dipelajari</label>
+                            <input type="text" class="form-control" id="materi_dipelajari" name="materi_dipelajari" placeholder="Contoh: Python Dasar" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="pekerjaan" class="form-label">Pekerjaan</label>
+                            <textarea class="form-control" id="pekerjaan" name="pekerjaan" rows="4" placeholder="Deskripsi pekerjaan yang sedang dikerjakan, contoh: pembuatan CRUD" required></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label for="kendala" class="form-label">Kendala</label>
+                            <textarea class="form-control" id="kendala" name="kendala" rows="4" placeholder="Masalah yang dihadapi saat bekerja" required></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label for="solusi" class="form-label">Solusi</label>
+                            <textarea class="form-control" id="solusi" name="solusi" rows="3" placeholder="Solusi dari kendala, boleh dikosongkan jika belum ada"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label for="target_belajar_besok" class="form-label">Target Belajar Besok</label>
+                            <textarea class="form-control" id="target_belajar_besok" name="target_belajar_besok" rows="3" placeholder="Materi yang akan dipelajari besok" required></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-4">Simpan Logbook</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h2 class="h4 mb-3">Riwayat Logbook</h2>
+                {% if logbooks %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Materi</th>
+                                    <th>Pekerjaan</th>
+                                    <th>Kendala</th>
+                                    <th>Solusi</th>
+                                    <th>Target Besok</th>
+                                    <th>Durasi</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in logbooks %}
+                                <tr>
+                                    <td>{{ item.tanggal.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ item.materi_dipelajari }}</td>
+                                    <td>
+                                        {% if item.tugas %}
+                                            {{ item.tugas.nama_tugas }}
+                                        {% else %}
+                                            {{ item.pekerjaan }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.kendala }}</td>
+                                    <td>{{ item.solusi or '-' }}</td>
+                                    <td>{{ item.target_belajar_besok }}</td>
+                                    <td>{{ item.durasi_belajar }} jam</td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ url_for('edit_logbook', id=item.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                            <form action="{{ url_for('hapus_logbook', id=item.id) }}" method="POST" class="sweet-confirm-form" data-confirm-message="Yakin ingin menghapus logbook ini?">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Hapus</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <p class="mb-0">Belum ada logbook yang tersimpan.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-swal="true"]').forEach(function (element) {
+                const title = element.dataset.swalTitle || 'Notifikasi';
+                const text = element.dataset.swalText || '';
+                const icon = element.dataset.swalIcon || 'info';
+
+                Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: icon,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#0d6efd'
+                });
+            });
+
+            document.querySelectorAll('.sweet-confirm-form').forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    event.preventDefault();
+                    Swal.fire({
+                        title: 'Konfirmasi',
+                        text: form.dataset.confirmMessage || 'Apakah Anda yakin?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, lanjutkan',
+                        cancelButtonText: 'Batal',
+                        confirmButtonColor: '#0d6efd'
+                    }).then(function (result) {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
+        });
+
+        const kategoriSelect = document.getElementById('kategori_id');
+        const tugasSelect = document.getElementById('tugas_id');
+
+        function filterTugasByKategori() {
+            if (!kategoriSelect || !tugasSelect) {
+                return;
+            }
+
+            const selectedKategori = kategoriSelect.value;
+            const allOptions = [...tugasSelect.options];
+
+            allOptions.forEach(option => {
+                const optionKategori = option.dataset.kategoriId;
+                const shouldShow = !selectedKategori || optionKategori === selectedKategori || option.value === '';
+                option.hidden = !shouldShow;
+                option.disabled = !shouldShow;
+            });
+
+            const firstAvailableOption = allOptions.find(option => option.value === '' || option.dataset.kategoriId === selectedKategori);
+            if (firstAvailableOption) {
+                tugasSelect.value = firstAvailableOption.value;
+            }
+        }
+
+        if (kategoriSelect) {
+            kategoriSelect.addEventListener('change', filterTugasByKategori);
+            filterTugasByKategori();
+        }
+    </script>
+</body>
+</html>
