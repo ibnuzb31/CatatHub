@@ -1,6 +1,4 @@
-import os
 from datetime import datetime
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from flask import Flask, flash, redirect, render_template, request, url_for
 
@@ -8,26 +6,7 @@ from models import DaftarTugas, KategoriProyek, LogbookPekerjaanHarian, db
 
 app = Flask(__name__)
 app.secret_key = 'project_database_week2_secret_key'
-database_url = os.environ.get(
-    'DATABASE_URL',
-    'mysql+pymysql://root:@localhost:3306/db_manajemen_tugas'
-).strip()
-
-if database_url.startswith('mysql://'):
-    database_url = 'mysql+pymysql://' + database_url[len('mysql://'):]
-
-database_parts = urlsplit(database_url)
-database_query = parse_qsl(database_parts.query, keep_blank_values=True)
-ssl_required = any(key.lower().replace('-', '_') == 'ssl_mode' for key, _ in database_query)
-database_query = [
-    (key, value) for key, value in database_query
-    if key.lower().replace('-', '_') != 'ssl_mode'
-]
-database_url = urlunsplit(database_parts._replace(query=urlencode(database_query)))
-
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-if ssl_required:
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'connect_args': {'ssl': {}}}
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost:3306/db_manajemen_tugas'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
